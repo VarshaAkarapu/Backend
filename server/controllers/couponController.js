@@ -32,7 +32,7 @@ const getCouponsByBrand = async (req, res) => {
         });
 
         if (coupons.length === 0) {
-            return res.status(404).json({ message: "No coupons found for this brand" });
+            return res.status(404).json({ message: "No coupons found" });
         }
 
         res.status(200).json(coupons);
