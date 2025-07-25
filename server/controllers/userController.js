@@ -1,28 +1,38 @@
 const User = require("../models/User");
 const admin = require("../confiq/fireBase");
+
+
 const createUserWithPhone = async (req, res) => {
   try {
     const { idToken } = req.query;
     if (!idToken) {
       return res.status(400).json({ message: "idToken is required in query" });
     }
- 
+
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const phoneNumber = decodedToken.phone_number;
- 
+
     if (!phoneNumber) {
       return res
         .status(400)
         .json({ message: "Phone number not found in token" });
     }
- 
+
     let user = await User.findOne({ phone: phoneNumber });
+    let isNewUser = false;
+
     if (!user) {
       user = new User({ phone: phoneNumber });
       await user.save();
+      isNewUser = true;
     }
- 
-    res.status(200).json({ message: "User logged in", user });
+
+    res.status(200).json({ 
+      message: "User logged in", 
+      phone: phoneNumber,
+      isNewUser,
+      user 
+    });
   } catch (error) {
     console.error("Error in verifying token:", error);
     res.status(401).json({ message: "Invalid token", error: error.message });
