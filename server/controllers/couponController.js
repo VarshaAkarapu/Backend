@@ -19,6 +19,33 @@ const getCouponsByCategory = async (req, res) => {
     }
 };
 
+const getCouponsByBrand = async (req, res) => {
+    try {
+        const query = req.query.query;
+        if (!query) return res.status(400).json({ message: "Query is required" });
+
+        const suggestions = await Coupon.aggregate([
+            {
+                $match: {
+                    brandName: { $regex: new RegExp(`^${query}`, "i") }
+                }
+            },
+            {
+                $group: {
+                    _id: "$brandName"
+                }
+            },
+            {
+                $limit: 10
+            }
+        ]);
+
+        res.json(suggestions.map(s => s._id));
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch suggestions", error });
+    }
+}
+
 
 const getAllCoupons = async (req, res) => {
     try {
@@ -195,6 +222,7 @@ module.exports = {
     addCoupon,
     getAllCoupons,
     getCouponsByCategory,
+    getCouponsByBrand,
     updateCouponStatus,
     getCouponById,
     editCoupon,
