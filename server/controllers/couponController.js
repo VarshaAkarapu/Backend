@@ -24,27 +24,19 @@ const getCouponsByBrand = async (req, res) => {
         const query = req.query.query;
         if (!query) return res.status(400).json({ message: "Query is required" });
 
-        const suggestions = await Coupon.aggregate([
-            {
-                $match: {
-                    brandName: { $regex: new RegExp(`^${query}`, "i") }
-                }
-            },
-            {
-                $group: {
-                    _id: "$brandName"
-                }
-            },
-            {
-                $limit: 10
-            }
-        ]);
+        const coupons = await Coupon.find({
+            brandName: { $regex: new RegExp(query, "i") }
+        });
 
-        res.json(suggestions.map(s => s._id));
+        if (coupons.length === 0) {
+            return res.status(404).json({ message: "No coupons found for this brand" });
+        }
+
+        res.status(200).json(coupons);
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch suggestions", error });
+        res.status(500).json({ message: "Failed to fetch coupons", error });
     }
-}
+};
 
 
 const getAllCoupons = async (req, res) => {
