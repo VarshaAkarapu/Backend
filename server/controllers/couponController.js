@@ -22,7 +22,10 @@ const getCouponsByCategory = async (req, res) => {
 const getCouponsByBrand = async (req, res) => {
     try {
         const query = req.query.query;
-        if (!query) return res.status(400).json({ message: "Query is required" });
+
+        if (!query) {
+            return res.status(400).json({ message: "Query is required" });
+        }
 
         const coupons = await Coupon.find({
             brandName: { $regex: new RegExp(query, "i") }
