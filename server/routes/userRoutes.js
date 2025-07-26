@@ -46,6 +46,13 @@ router.get("/phone", createUserWithPhone);
  *   post:
  *     summary: Complete registration by adding user profile details
  *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
  *     requestBody:
  *       required: true
  *       content:
@@ -53,22 +60,25 @@ router.get("/phone", createUserWithPhone);
  *           schema:
  *             type: object
  *             properties:
- *               phone:
+ *               firstName:
  *                 type: string
- *                 example: "+919876543210"
- *               name:
+ *               lastName:
  *                 type: string
- *                 example: "John Doe"
- *               address:
+ *               email:
  *                 type: string
- *                 example: "123 Main St"
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *               upi:
+ *                 type: string
  *     responses:
  *       200:
  *         description: User registered successfully
  *       404:
- *         description: Phone number not found
+ *         description: User not found
  */
-router.post("/register", completeUserProfile);
+router.post("/register/:userId", completeUserProfile);
+
 
 /**
  * @swagger

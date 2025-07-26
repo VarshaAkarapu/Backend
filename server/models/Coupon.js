@@ -4,7 +4,10 @@ const couponSchema = new mongoose.Schema({
     couponId: { type: String, unique: true },
     userId: { type: String, required: true },
     categoryName: { type: String, required: true },
-    brandName: { type: String, required: true },
+    brandId: {
+        type: String,
+        required: true
+    },
     couponCode: { type: String, required: true, unique: true },
     expireDate: { type: Date, required: true },
     price: { type: Number, default: 0 },

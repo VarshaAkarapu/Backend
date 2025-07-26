@@ -4,7 +4,6 @@ const {
   addCoupon,
   getAllCoupons,
   getCouponsByCategory,
-  getCouponsByBrand,
   updateCouponStatus,
   getCouponById,
   editCoupon,
@@ -181,7 +180,5 @@ router.put("/:couponId", editCoupon);
  *         description: List of user's coupons
  */
 router.get("/user/:userId", getCouponsByUser);
-
-router.get("/brands",getCouponsByBrand);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 const Coupon = require("../models/Coupon");
 const User = require("../models/User");
+const Brand = require("../models/Brands");
 const updateUserLevel = require("../utils/updateUserLevel");
-
 
 const getCouponsByCategory = async (req, res) => {
     const { categoryName } = req.query;
@@ -19,29 +19,6 @@ const getCouponsByCategory = async (req, res) => {
     }
 };
 
-const getCouponsByBrand = async (req, res) => {
-    try {
-        const query = req.query.query;
-
-        if (!query) {
-            return res.status(400).json({ message: "Query is required" });
-        }
-
-        const coupons = await Coupon.find({
-            brandName: { $regex: new RegExp(query, "i") }
-        });
-
-        if (coupons.length === 0) {
-            return res.status(404).json({ message: "No coupons found" });
-        }
-
-        res.status(200).json(coupons);
-    } catch (error) {
-        res.status(500).json({ message: "Failed to fetch coupons", error });
-    }
-};
-
-
 const getAllCoupons = async (req, res) => {
     try {
         const coupons = await Coupon.find({}, 'couponId userId brandName couponCode expireDate price termsAndConditionImage');
@@ -51,81 +28,51 @@ const getAllCoupons = async (req, res) => {
     }
 };
 
-
 const addCoupon = async (req, res) => {
+  try {
     const {
-        userId,
-        categoryName,
-        brandName,
-        couponCode,
-        expireDate,
-        termsAndConditionImage
+      title,
+      description,
+      discount,
+      expiryDate,
+      brandName,
+      categoryName,
+      terms
     } = req.body;
 
-    try {
-        if (!termsAndConditionImage) {
-            return res.status(400).json({ message: "Terms & Conditions image URL is required" });
-        }
-
-        if (!userId || !categoryName) {
-            return res.status(400).json({ message: "userId and categoryName are required" });
-        }
-
-        const user = await User.findOne({ userId });
-        if (!user) {
-            return res.status(400).json({ message: "User not found. Please register first." });
-        }
-
-        // ✅ Daily limit check (7 per day)
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const uploadsToday = await Coupon.countDocuments({
-            userId,
-            createdAt: { $gte: startOfDay, $lte: endOfDay }
-        });
-
-        if (uploadsToday >= 7) {
-            return res.status(403).json({ message: "Daily upload limit (7) reached. Try again tomorrow." });
-        }
-
-        const codeExists = await Coupon.findOne({ couponCode });
-        if (codeExists) {
-            return res.status(400).json({ message: "Coupon code already exists" });
-        }
-
-        const totalCoupons = await Coupon.countDocuments();
-        const newCouponId = `COUP${(totalCoupons + 1).toString().padStart(3, '0')}`;
-
-        const coupon = await Coupon.create({
-            couponId: newCouponId,
-            userId,
-            categoryName,
-            brandName,
-            couponCode,
-            expireDate,
-            termsAndConditionImage,
-            status: "not_verified",
-        });
-
-        await User.updateOne({ userId }, { $inc: { totalCouponsUploaded: 1 } });
-
-        await updateUserLevel(userId);
-
-        res.status(201).json({ message: "Coupon created successfully", data: coupon });
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!brandName) {
+      return res.status(400).json({ message: "brandName is required" });
     }
+
+    // Find brand using case-insensitive match
+    const brand = await Brand.findOne({
+      brandName: { $regex: new RegExp(`^${brandName}$`, "i") }
+    });
+
+    if (!brand) {
+      return res.status(404).json({ message: "Brand not found" });
+    }
+
+    const newCoupon = new Coupon({
+      title,
+      description,
+      discount,
+      expiryDate,
+      brandId: brand.brandId,
+      categoryName,
+      terms
+    });
+
+    const savedCoupon = await newCoupon.save();
+    res.status(201).json(savedCoupon);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to add coupon", error: error.message });
+  }
 };
 
 const updateCouponStatus = async (req, res) => {
     const { couponId, status } = req.query;
 
-    // validate inputs
     const allowedStatuses = ["approved", "rejected"];
     if (!couponId || !status) {
         return res.status(400).json({ message: "couponId and status are required in query" });
@@ -212,12 +159,10 @@ const getCouponsByUser = async (req, res) => {
     }
 };
 
-
 module.exports = {
     addCoupon,
     getAllCoupons,
     getCouponsByCategory,
-    getCouponsByBrand,
     updateCouponStatus,
     getCouponById,
     editCoupon,
