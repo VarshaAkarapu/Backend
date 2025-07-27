@@ -37,32 +37,47 @@ router.get("/", getAllBrands);
 
 /**
  * @swagger
- * /coupons/bycategory:
+ * /api/brands/couponByBrand:
  *   get:
- *     summary: Get all coupons by category name
- *     tags: [Coupons]
+ *     summary: Get all coupons for a given brand
+ *     tags: [Brands]
  *     parameters:
  *       - in: query
- *         name: categoryName
- *         required: true
+ *         name: brandName
  *         schema:
  *           type: string
- *         description: Name of the category to filter coupons by
+ *         required: true
+ *         description: Brand name to fetch coupons for
  *     responses:
  *       200:
- *         description: A list of coupons for the specified category
+ *         description: List of coupons for the given brand
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Coupon'
+ *                 type: object
+ *                 properties:
+ *                   couponId:
+ *                     type: string
+ *                   couponCode:
+ *                     type: string
+ *                   brandName:
+ *                     type: string
+ *                   brandId:
+ *                     type: string
+ *                   percentage:
+ *                     type: number
+ *                   expireDate:
+ *                     type: string
+ *                     format: date
  *       400:
- *         description: Missing categoryName query parameter
+ *         description: brandName is required
  *       404:
- *         description: No coupons found for this category
+ *         description: Brand not found
  *       500:
  *         description: Server error
  */
-router.get("/bycategory", getCouponsByCategory);
+router.get("/couponByBrand", getCouponsByBrand);
+
 module.exports = router;
