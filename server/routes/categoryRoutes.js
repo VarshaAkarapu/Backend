@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { getCategories, addCategory } = require("../controllers/categoryController");
+const { getCategories, addCategory, getCouponsByCategory } = require("../controllers/categoryController");
 
 /**
  * @swagger
@@ -45,5 +45,24 @@ router.get("/", getCategories);
  *         description: Category created successfully
  */
 router.post("/", addCategory);
+
+/**
+ * @swagger
+ * /categories/{categoryName}/coupons:
+ *   get:
+ *     summary: Get all coupons by category name
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: categoryName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the category
+ *     responses:
+ *       200:
+ *         description: A list of coupons for the category
+ */
+router.get("/bycategory", getCouponsByCategory);
 
 module.exports = router;

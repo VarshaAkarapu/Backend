@@ -1,4 +1,5 @@
 const Category = require("../models/Category");
+const Coupon = require("../models/Coupon");
 
 const getCategories = async (req, res) => {
   try {
@@ -32,4 +33,24 @@ const addCategory = async (req, res) => {
   }
 };
 
-module.exports = { getCategories, addCategory };
+const getCouponsByCategory = async (req, res) => {
+  const { categoryName } = req.query;
+
+  try {
+    if (!categoryName) {
+      return res.status(400).json({ message: "categoryName query parameter is required" });
+    }
+
+    const coupons = await Coupon.find({ categoryName });
+
+    if (!coupons || coupons.length === 0) {
+      return res.status(404).json({ message: "No coupons found for this category" });
+    }
+
+    res.status(200).json(coupons);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+module.exports = { getCategories, addCategory, getCouponsByCategory };
