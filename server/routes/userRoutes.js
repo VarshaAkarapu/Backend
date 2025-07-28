@@ -19,32 +19,93 @@ const {
 /**
  * @swagger
  * /users/phone:
- *   post:
- *     summary: Create a new user with phone number
+ *   get:
+ *     summary: Create or fetch user with phone number using Firebase IdToken
  *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: idToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Firebase authentication token
+ *     responses:
+ *       200:
+ *         description: User logged in or created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 phone:
+ *                   type: string
+ *                 isNewUser:
+ *                   type: boolean
+ *                 user:
+ *                   type: object
+ *       400:
+ *         description: idToken missing or phone number not found
+ *       401:
+ *         description: Invalid token
+ */
+router.get("/phone", createUserWithPhone);
+
+/**
+ * @swagger
+ * /users/register/{userId}:
+ *   post:
+ *     summary: Complete user registration by adding profile details
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - dob
+ *               - upi
  *             properties:
- *               IdToken:
+ *               firstName:
  *                 type: string
- *                 example: "abcd#89"
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *               upi:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Phone number saved successfully
- *       400:
- *         description: Bad request
+ *         description: User profile completed
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
  */
-router.get("/phone", createUserWithPhone);
+router.post("/register/:userId", completeUserProfile);
+
+
 
 /**
  * @swagger
- * /users/register:
- *   post:
- *     summary: Complete registration by adding user profile details
+ * /users/profile/{userId}:
+ *   put:
+ *     summary: Update user profile
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -73,51 +134,20 @@ router.get("/phone", createUserWithPhone);
  *                 type: string
  *     responses:
  *       200:
- *         description: User registered successfully
+ *         description: User profile updated
  *       404:
  *         description: User not found
- */
-router.post("/register/:userId", completeUserProfile);
-
-
-/**
- * @swagger
- * /users/profile/{userId}:
- *   put:
- *     summary: Update user profile
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               firstName:
- *                 type: string
- *               lastName:
- *                 type: string
- *               dob:
- *                 type: string
- *                 format: date
- *     responses:
- *       200:
- *         description: User profile updated
+ *       500:
+ *         description: Server error
  */
 router.put("/profile/:userId", updateUserProfile);
+
 
 /**
  * @swagger
  * /users/search:
  *   get:
- *     summary: Search for a user by email
+ *     summary: Get user by email
  *     tags: [Users]
  *     parameters:
  *       - in: query
@@ -125,20 +155,29 @@ router.put("/profile/:userId", updateUserProfile);
  *         required: true
  *         schema:
  *           type: string
- *         description: Email to search for
+ *         description: Email of the user
  *     responses:
  *       200:
  *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Email query is required
  *       404:
  *         description: User not found
+ *       500:
+ *         description: Server error
  */
 router.get("/search", getUserByEmail);
+
 
 /**
  * @swagger
  * /users/{userId}:
  *   delete:
- *     summary: Delete a user
+ *     summary: Delete user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -146,12 +185,17 @@ router.get("/search", getUserByEmail);
  *         required: true
  *         schema:
  *           type: string
- *         description: User ID
+ *         description: ID of the user to delete
  *     responses:
  *       200:
  *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
  */
 router.delete("/:userId", deleteUser);
+
 
 /**
  * @swagger
@@ -161,7 +205,15 @@ router.delete("/:userId", deleteUser);
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: List of users
+ *         description: Array of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Server error
  */
 router.get("/", getAllUsers);
 

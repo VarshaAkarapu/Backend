@@ -14,11 +14,11 @@ const { getAllBrands, getCouponsByBrand } = require("../controllers/brandControl
  * @swagger
  * /api/brands:
  *   get:
- *     summary: Get all brands
+ *     summary: Retrieve all available brands
  *     tags: [Brands]
  *     responses:
  *       200:
- *         description: List of all brands
+ *         description: A list of all brands
  *         content:
  *           application/json:
  *             schema:
@@ -26,12 +26,17 @@ const { getAllBrands, getCouponsByBrand } = require("../controllers/brandControl
  *               items:
  *                 type: object
  *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     description: MongoDB ObjectId of the brand
  *                   brandId:
  *                     type: string
+ *                     description: Unique identifier for the brand
  *                   brandName:
  *                     type: string
+ *                     description: Name of the brand
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 router.get("/", getAllBrands);
 
@@ -39,7 +44,7 @@ router.get("/", getAllBrands);
  * @swagger
  * /api/brands/couponByBrand:
  *   get:
- *     summary: Get all coupons for a given brand
+ *     summary: Retrieve coupons by brand name
  *     tags: [Brands]
  *     parameters:
  *       - in: query
@@ -47,10 +52,10 @@ router.get("/", getAllBrands);
  *         schema:
  *           type: string
  *         required: true
- *         description: Brand name to fetch coupons for
+ *         description: Brand name (case-insensitive)
  *     responses:
  *       200:
- *         description: List of coupons for the given brand
+ *         description: A list of coupons matching the given brand name
  *         content:
  *           application/json:
  *             schema:
@@ -58,25 +63,34 @@ router.get("/", getAllBrands);
  *               items:
  *                 type: object
  *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     description: MongoDB ObjectId of the coupon
  *                   couponId:
  *                     type: string
+ *                     description: Unique identifier for the coupon
  *                   couponCode:
  *                     type: string
+ *                     description: Code of the coupon
  *                   brandName:
  *                     type: string
+ *                     description: Name of the associated brand
  *                   brandId:
  *                     type: string
+ *                     description: ID of the associated brand
  *                   percentage:
  *                     type: number
+ *                     description: Discount percentage
  *                   expireDate:
  *                     type: string
  *                     format: date
+ *                     description: Expiry date of the coupon
  *       400:
- *         description: brandName is required
+ *         description: brandName query parameter is missing
  *       404:
  *         description: Brand not found
  *       500:
- *         description: Server error
+ *         description: Internal server error while fetching coupons
  */
 router.get("/couponByBrand", getCouponsByBrand);
 
