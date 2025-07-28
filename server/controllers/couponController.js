@@ -1,6 +1,8 @@
 const Coupon = require("../models/Coupon");
 const User = require("../models/User");
 const Brand = require("../models/Brands");
+const { getStorage } = require("firebase-admin/storage");
+const { v4: uuidv4 } = require("uuid");
 const updateUserLevel = require("../utils/updateUserLevel");
 
 const getCouponsByCategory = async (req, res) => {
@@ -37,7 +39,7 @@ const addCoupon = async (req, res) => {
       expiryDate,
       brandName,
       categoryName,
-      terms
+      terms,
     } = req.body;
 
     if (!brandName) {
@@ -46,11 +48,36 @@ const addCoupon = async (req, res) => {
 
     // Find brand using case-insensitive match
     const brand = await Brand.findOne({
-      brandName: { $regex: new RegExp(`^${brandName}$`, "i") }
+      brandName: { $regex: new RegExp(`^${brandName}$`, "i") },
     });
 
     if (!brand) {
       return res.status(404).json({ message: "Brand not found" });
+    }
+
+    // Upload file to Firebase Storage
+    let imageUrl = "";
+    if (req.file) {
+      const bucket = getStorage().bucket();
+      const blob = bucket.file(`terms/${Date.now()}_${req.file.originalname}`);
+      const blobStream = blob.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+          metadata: {
+            firebaseStorageDownloadTokens: uuidv4(),
+          },
+        },
+      });
+
+      blobStream.end(req.file.buffer);
+
+      await new Promise((resolve, reject) => {
+        blobStream.on("finish", resolve);
+        blobStream.on("error", reject);
+      });
+
+      const token = blob.metadata.metadata.firebaseStorageDownloadTokens;
+      imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(blob.name)}?alt=media&token=${token}`;
     }
 
     const newCoupon = new Coupon({
@@ -60,7 +87,8 @@ const addCoupon = async (req, res) => {
       expiryDate,
       brandId: brand.brandId,
       categoryName,
-      terms
+      terms,
+      termsAndConditionImage: imageUrl,
     });
 
     const savedCoupon = await newCoupon.save();
