@@ -2,6 +2,7 @@ const Coupon = require("../models/Coupon");
 const User = require("../models/User");
 const Brand = require("../models/Brands");
 const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const updateUserLevel = require("../utils/updateUserLevel");
 
@@ -22,28 +23,46 @@ const getCouponsByCategory = async (req, res) => {
 };
 
 const getAllCoupons = async (req, res) => {
-    try {
-        const coupons = await Coupon.find({}, 'couponId userId brandName couponCode expireDate price termsAndConditionImage');
-        res.status(200).json(coupons);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const coupons = await Coupon.find({});
+
+    const formattedCoupons = coupons.map(coupon => {
+      let imageBase64 = null;
+      if (coupon.termsAndConditionImage?.data) {
+        imageBase64 = `data:${coupon.termsAndConditionImage.contentType};base64,${coupon.termsAndConditionImage.data.toString('base64')}`;
+      }
+
+      return {
+        couponId: coupon.couponId,
+        userId: coupon.userId,
+        brandId: coupon.brandId,
+        couponCode: coupon.couponCode,
+        expireDate: coupon.expireDate,
+        price: coupon.price,
+        termsAndConditionImage: imageBase64
+      };
+    });
+
+    res.status(200).json(formattedCoupons);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
+
 
 const addCoupon = async (req, res) => {
   try {
     const {
-      title,
-      description,
-      discount,
-      expiryDate,
-      brandName,
+      userId,
       categoryName,
-      terms,
+      brandName,
+      couponCode,
+      expireDate,
+      price,
     } = req.body;
 
-    if (!brandName) {
-      return res.status(400).json({ message: "brandName is required" });
+    if (!userId || !categoryName || !brandName || !couponCode || !expireDate) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     const brand = await Brand.findOne({
@@ -60,21 +79,20 @@ const addCoupon = async (req, res) => {
       const fileBuffer = fs.readFileSync(filePath);
       imageData = {
         data: fileBuffer,
-        contentType: req.file.mimetype
+        contentType: req.file.mimetype,
       };
-
-      // Optionally delete file after reading
-      fs.unlinkSync(filePath);
+      fs.unlinkSync(filePath); // Clean up file
     }
 
+    // Create new coupon
     const newCoupon = new Coupon({
-      title,
-      description,
-      discount,
-      expiryDate,
-      brandId: brand.brandId,
+      couponId: uuidv4(),
+      userId,
       categoryName,
-      terms,
+      brandId: brand.brandId,
+      couponCode,
+      expireDate,
+      price: price || 0,
       termsAndConditionImage: imageData,
     });
 
