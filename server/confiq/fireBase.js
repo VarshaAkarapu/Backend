@@ -13,7 +13,6 @@ const serviceAccount = JSON.parse(
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: "qupon-18d49.appspot.com",
   });
 }
 

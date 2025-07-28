@@ -11,7 +11,10 @@ const couponSchema = new mongoose.Schema({
     couponCode: { type: String, required: true, unique: true },
     expireDate: { type: Date, required: true },
     price: { type: Number, default: 0 },
-    termsAndConditionImage: { type: String, required: true },
+    termsAndConditionImage: {
+        data: Buffer,
+        contentType: String
+    },
 
     status: {
         type: String,
