@@ -1,6 +1,5 @@
 const User = require("../models/User");
 const admin = require("../confiq/fireBase");
-const adminPhoneNumbers = process.env.ADMIN_PHONES?.split(",") || [];
 
 const createUserWithPhone = async (req, res) => {
   try {
@@ -16,23 +15,20 @@ const createUserWithPhone = async (req, res) => {
       return res.status(400).json({ message: "Phone number not found in token" });
     }
 
-    const adminPhoneNumbers = process.env.ADMIN_PHONES?.split(",") || [];
-
     let user = await User.findOne({ phone: phoneNumber });
     let isNewUser = false;
 
     if (!user) {
-      const role = adminPhoneNumbers.includes(phoneNumber) ? "admin" : "user";
-      user = new User({ phone: phoneNumber, role });
+      user = new User({ phone: phoneNumber, role: "user" });
       await user.save();
       isNewUser = true;
     }
 
-    res.status(200).json({ 
-      message: "User logged in", 
+    res.status(200).json({
+      message: "User logged in",
       phone: phoneNumber,
       isNewUser,
-      user 
+      user
     });
   } catch (error) {
     console.error("Error in verifying token:", error);
